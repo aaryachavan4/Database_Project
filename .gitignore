@@ -1,0 +1,10 @@
+*.pyc
+__pycache__/
+.DS_Store
+*.csv
+*.log
+vault/data/
+vault/logs/
+mariadb/data/
+.env
+*.key
