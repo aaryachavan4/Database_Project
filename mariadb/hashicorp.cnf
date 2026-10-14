@@ -1,0 +1,12 @@
+[mariadb]
+
+plugin_load_add=hashicorp_key_management.so
+
+hashicorp-key-management-vault-url=http://host.docker.internal:8200/v1/mariadb
+hashicorp-key-management-caching-enabled=ON
+
+innodb_encrypt_tables=FORCE
+innodb_encrypt_log=ON
+innodb_encrypt_temporary_tables=ON
+encrypt_tmp_disk_tables=ON
+encrypt_tmp_files=ON

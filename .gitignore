@@ -8,3 +8,6 @@ vault/logs/
 mariadb/data/
 .env
 *.key
+
+.venv/
+encryption_test_backup.sql

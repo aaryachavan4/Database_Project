@@ -1,7 +1,9 @@
 FROM mariadb:latest
 
-ENV MYSQL_ROOT_PASSWORD=mariadb123
+RUN apt-get update && \
+    apt-get install -y mariadb-plugin-hashicorp-key-management && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY schema.sql /docker-entrypoint-initdb.d/01-schema.sql
+ENV MYSQL_ROOT_PASSWORD=root_password
 
 EXPOSE 3306
