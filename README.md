@@ -7,12 +7,14 @@ This project encrypts the tables of a MariaDB database at rest, with the encrypt
 Setup: see [mariadb/README.md](mariadb/README.md) for the database and [vault/README.md](vault/README.md) for Vault.
 
 ## Quick start
+1. Start Vault and unseal it (see `vault/README.md`).
+2. From the project root, run:
 
-1. Install Docker Desktop, the Vault CLI, and Python 3 with `pip install pymysql faker`.
-2. Start Vault and create the `mariadb/` store, policy and key. Follow steps 1 and 2 in [mariadb/README.md](mariadb/README.md).
-3. Create a token and start MariaDB. Follow steps 3 to 5 in [mariadb/README.md](mariadb/README.md).
-4. Load the data and encrypt the tables. Follow step 7 in [mariadb/README.md](mariadb/README.md).
-5. Verify the setup. Follow step 8 in [mariadb/README.md](mariadb/README.md).
+   ```bash
+   bash mariadb/start.sh
+   ```
+
+The script builds the image, starts MariaDB with your Vault token, loads the schema and the sample data, and checks that encryption is on. It ends with `Done. MariaDB is running with encryption on.` It removes and recreates the `mariadb` container on every run, so existing data is reset.
 
 ## Platforms
 
@@ -27,6 +29,10 @@ The database runs MariaDB 13.0.2 in Docker, with the HashiCorp Vault key managem
 - `customers`: personal details, including SSN (sensitive)
 - `accounts`: account numbers and balances (sensitive)
 - `transactions`: amounts, merchants and dates (sensitive, 1,000,000 rows)
+
+### Schema design
+
+The database has three tables. Each account belongs to one customer through `accounts.customer_id`, and each transaction belongs to one account through `transactions.account_id`. The most sensitive columns are marked `SENSITIVE` in `schema.sql`: `ssn`, `account_number`, `balance` and `merchant_name`. Encryption is applied per table (`innodb_encrypt_tables=FORCE`), so every column is encrypted on disk, not only the marked ones. The marking shows which data would cause the most harm if it leaked. `transactions` has indexes on `account_id` and `created_at` for lookups by account and by date.
 
 Setup steps are in `mariadb/README.md`. Table encryption is set in `mariadb/hashicorp.cnf` with `innodb_encrypt_tables=FORCE`. The tables were encrypted with `encrypted-config.sql`, and all three report `ENCRYPTION_SCHEME` 1.
 
