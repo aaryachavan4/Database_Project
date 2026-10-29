@@ -6,6 +6,4 @@ RUN apt-get update && \
     
 COPY hashicorp.cnf /etc/mysql/conf.d/hashicorp.cnf
 
-ENV MYSQL_ROOT_PASSWORD=root_password
-
 EXPOSE 3306
