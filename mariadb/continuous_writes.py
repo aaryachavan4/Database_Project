@@ -1,3 +1,4 @@
+import os
 import pymysql
 import random
 import time
@@ -6,7 +7,7 @@ DURATION = 600  # seconds
 MERCHANTS = ["Tesco", "Amazon", "Shell", "Lidl", "Netflix", "Apple", "Uber", "Spotify"]
 TYPES = ["debit", "credit", "transfer"]
 
-conn = pymysql.connect(host="127.0.0.1", user="root", password="root_password", database="encryption_test")
+conn = pymysql.connect(host="127.0.0.1", user="root", password=os.environ["MYSQL_ROOT_PASSWORD"], database="encryption_test")
 cursor = conn.cursor()
 
 cursor.execute("SELECT account_id FROM accounts")
