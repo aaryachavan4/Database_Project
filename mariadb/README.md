@@ -45,15 +45,15 @@ docker run --name mariadb -e MYSQL_ROOT_PASSWORD=root_password -e VAULT_TOKEN="$
 ## 6. Check that encryption is on
 ```bash
 sleep 20; docker ps
-docker exec mariadb mariadb -uroot -proot_password -e "SHOW VARIABLES LIKE 'innodb_encrypt%'; SELECT PLUGIN_NAME, PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME LIKE 'hashicorp%';"
+docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SHOW VARIABLES LIKE 'innodb_encrypt%'; SELECT PLUGIN_NAME, PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME LIKE 'hashicorp%';"
 ```
 Expected: `innodb_encrypt_tables` is `FORCE`, the log and temporary table settings are `ON`, and both `hashicorp_key_management` plugins are `ACTIVE`.
 
 ## 7. Load the data and encrypt the tables
 ```bash
-docker exec -i mariadb mariadb -uroot -proot_password < schema.sql
+docker exec -i mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" < schema.sql
 python3 load_data.py
-docker exec -i mariadb mariadb -uroot -proot_password < encrypted-config.sql
+docker exec -i mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" < encrypted-config.sql
 ```
 Expected: `ENCRYPTION_SCHEME` is `1` for `customers`, `accounts` and `transactions`.
 
@@ -69,17 +69,17 @@ To rotate the key, write a new version to Vault, then flush MariaDB's key cache:
 ```bash
 export VAULT_ADDR='http://127.0.0.1:8200'
 vault kv put mariadb/1 data="$(openssl rand -hex 16)"
-docker exec mariadb mariadb -uroot -proot_password -e "FLUSH HASHICORP_KEY_MANAGEMENT_CACHE; SELECT * FROM information_schema.HASHICORP_KEY_MANAGEMENT_CACHE;"
+docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH HASHICORP_KEY_MANAGEMENT_CACHE; SELECT * FROM information_schema.HASHICORP_KEY_MANAGEMENT_CACHE;"
 ```
 The cache output should show the new `KEY_VERSION`. Do not delete old key versions, since existing data may still need them.
 
 Existing data is re-encrypted in the background, which needs `innodb_encryption_threads` above 0:
 ```bash
-docker exec mariadb mariadb -uroot -proot_password -e "SET GLOBAL innodb_encryption_threads = 4;"
+docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL innodb_encryption_threads = 4;"
 ```
 Re-encryption is finished when this returns no rows:
 ```bash
-docker exec mariadb mariadb -uroot -proot_password -e "SELECT SPACE, NAME FROM information_schema.INNODB_TABLESPACES_ENCRYPTION WHERE ROTATING_OR_FLUSHING = 1;"
+docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SELECT SPACE, NAME FROM information_schema.INNODB_TABLESPACES_ENCRYPTION WHERE ROTATING_OR_FLUSHING = 1;"
 ```
 
 ## Troubleshooting

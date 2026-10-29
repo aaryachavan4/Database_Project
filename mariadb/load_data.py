@@ -1,10 +1,11 @@
+import os
 import pymysql
 from faker import Faker
 import random
 
 fake = Faker()
 
-conn = pymysql.connect(host='127.0.0.1', user='root', password='root_password', database='encryption_test')
+conn = pymysql.connect(host='127.0.0.1', user='root', password=os.environ['MYSQL_ROOT_PASSWORD'], database='encryption_test')
 cursor = conn.cursor()
 
 print("Loading customers...")
