@@ -1,0 +1,41 @@
+KEY ROTATION UNDER LOAD - RESULTS
+Run at: 2026-11-09 21:07:45
+Load: 4 reader threads (random primary-key lookups + range counts on customers, accounts, transactions), 1 writer thread (inserts into a scratch table)
+Settings during rotation: innodb_encryption_threads=4, innodb_encryption_rotation_iops=1000
+
+innodb_encryption_rotate_key_age = 1
+
+STEP A - one rotation (README procedure), Vault key v3 -> v4
+  Waited 60s. Data re-encrypted: NO
+  customers      data on v3, MariaDB knows v4
+  accounts       data on v3, MariaDB knows v4
+  transactions   data on v3, MariaDB knows v4
+  FINDING: after one rotation, existing data is still encrypted with key v3. Pages are only re-encrypted once they are more than 1 version(s) behind.
+
+STEP B - second rotation, Vault key v4 -> v5
+  Re-encryption time: 1.1 s
+  Key cache after rotation (KEY_ID, KEY_VERSION): [(1, 5)]
+
+Key version per table (oldest page version used):
+  customers      start: v3   end: v5   OK
+  accounts       start: v3   end: v5   OK
+  transactions   start: v3   end: v5   OK
+
+Query performance:
+  [before] read   ops:  264879  (17658.6/s)  errors:   0  avg:   0.23 ms  p95:   0.32 ms
+  [      ] write  ops:    1400  (   93.3/s)  errors:   0  avg:   0.47 ms  p95:   0.68 ms
+  [single] read   ops: 1013107  (16885.1/s)  errors:   0  avg:   0.24 ms  p95:   0.33 ms
+  [      ] write  ops:    5605  (   93.4/s)  errors:   0  avg:   0.48 ms  p95:   0.67 ms
+  [during] read   ops:   16171  (14113.5/s)  errors:   0  avg:   0.28 ms  p95:   0.45 ms
+  [      ] write  ops:     104  (   90.8/s)  errors:   0  avg:   0.65 ms  p95:   1.16 ms
+  [after ] read   ops:  234265  (15617.7/s)  errors:   0  avg:   0.25 ms  p95:   0.37 ms
+  [      ] write  ops:    1392  (   92.8/s)  errors:   0  avg:   0.51 ms  p95:   0.74 ms
+
+Data unchanged (CHECKSUM TABLE before == after): YES
+  before: {'customers': 1483823331, 'accounts': 885270237, 'transactions': 4099005701}
+  after:  {'customers': 1483823331, 'accounts': 885270237, 'transactions': 4099005701}
+Rows written during test: 8501, rows found afterwards: 8501  OK
+Failed queries: 0
+
+VERDICT: PASS - all data re-encrypted with the new key under load, no failed queries, no data change.
+NOTE: this needed two rotations. A single rotation (as in the README) leaves existing data on the old key while rotate_key_age = 1.
