@@ -1,0 +1,30 @@
+2026-11-09 19:13:41 0 [Note] mariadbd: hashicorp: Key not found (key id: 2)
+2026-11-09 19:13:42 0 [Note] mariadbd: hashicorp: Key not found (key id: 2)
+2026-11-09 19:33:17 0 [Note] mariadbd: hashicorp: Key not found (key id: 2)
+2026-11-09 19:37:10 0 [Note] mariadbd: hashicorp: Key not found (key id: 2)
+2026-11-09 20:22:29 0 [Warning] mariadbd: hashicorp: Hashicorp server error: 403, response: {"errors":["1 error occurred:\n\t* permission denied\n\n"]}
+2026-11-09 20:22:29 0 [ERROR] mariadbd: hashicorp: Unable to get key data
+2026-11-09 20:22:29 0 [Warning] mariadbd: hashicorp: Hashicorp server error: 403, response: {"errors":["1 error occurred:\n\t* permission denied\n\n"]}
+2026-11-09 20:22:29 0 [ERROR] mariadbd: hashicorp: Unable to get key data
+2026-11-09 20:22:29 0xf7ff5e00efc0  InnoDB: Assertion failure in file ./storage/innobase/fil/fil0crypt.cc line 538
+InnoDB: Failing assertion: key_version != ENCRYPTION_KEY_VERSION_INVALID
+InnoDB: If you get repeated assertion failures or crashes, even
+261109 20:22:29 [ERROR] mariadbd got signal 6 ;
+2026-11-09 20:22:29 0xf7ff7560efc0  InnoDB: Assertion failure in file ./storage/innobase/fil/fil0crypt.cc line 538
+InnoDB: Failing assertion: key_version != ENCRYPTION_KEY_VERSION_INVALID
+InnoDB: If you get repeated assertion failures or crashes, even
+2026-11-09 20:27:58 0 [Warning] mariadbd: hashicorp: Hashicorp server error: 403, response: {"errors":["1 error occurred:\n\t* permission denied\n\n"]}
+2026-11-09 20:27:58 0 [ERROR] mariadbd: hashicorp: Unable to get storage options for "http://host.docker.internal:8200/v1/sys/mounts/mariadb/tune"
+2026-11-09 20:27:58 0 [ERROR] Plugin 'hashicorp_key_management' init function returned error.
+2026-11-09 20:27:58 0 [ERROR] Plugin 'hashicorp_key_management' registration as a ENCRYPTION failed.
+2026-11-09 20:27:58 0 [ERROR] InnoDB: cannot enable encryption, encryption plugin is not available
+2026-11-09 20:27:58 0 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+2026-11-09 20:27:58 0 [ERROR] Plugin 'hashicorp_key_management_cache' init function returned error.
+2026-11-09 20:27:58 0 [ERROR] Plugin 'hashicorp_key_management_cache' registration as a INFORMATION SCHEMA failed.
+2026-11-09 20:27:58 0 [ERROR] Failed to enable encryption of temporary files
+2026-11-09 20:27:58 0 [ERROR] Aborting
+2026-11-09 20:44:01 0 [Note] InnoDB: Starting crash recovery from checkpoint LSN=420938997
+2026-11-09 20:44:01 0 [Note] mariadbd: hashicorp: Key not found (key id: 2)
+2026-11-09 20:44:01 0 [Note] Recovering after a crash using tc.log
+2026-11-09 20:44:01 0 [Note] Starting table crash recovery...
+2026-11-09 20:44:01 0 [Note] Crash table recovery finished.
