@@ -48,9 +48,6 @@ CHECK_EVERY = 30
 OUT_FILE = Path(__file__).resolve().parent / "failure_results.md"
 os.environ.setdefault("VAULT_ADDR", "http://127.0.0.1:8200")
 
-GOOD_POLICY = '''path "mariadb/*" { capabilities = ["create", "read", "update", "delete", "list"] }
-path "sys/mounts/mariadb/tune" { capabilities = ["read"] }
-'''
 DENY_POLICY = '''path "mariadb/*" { capabilities = ["deny"] }
 path "sys/mounts/mariadb/tune" { capabilities = ["deny"] }
 '''
@@ -87,7 +84,7 @@ def deny_vault():
 
 
 def allow_vault():
-    set_policy(GOOD_POLICY)
+    set_policy(state["original_policy"])
     state["policy_denied"] = False
 
 
@@ -196,8 +193,10 @@ def main():
     print("Checking setup...")
     if not running():
         sys.exit("ERROR: the 'mariadb' container isn't running.")
-    if sh(["vault", "policy", "read", "mariadb-policy"]).returncode != 0:
+    r = sh(["vault", "policy", "read", "mariadb-policy"])
+    if r.returncode != 0:
         sys.exit("ERROR: can't read mariadb-policy from Vault. Is Vault unsealed and are you logged in as root?")
+    state["original_policy"] = r.stdout
     plugin_vars = sh(["docker", "exec", CONTAINER, "mariadb", "-uroot", f"-p{PASSWORD}", "-N", "-B",
                       "-e", "SHOW GLOBAL VARIABLES WHERE Variable_name LIKE 'hashicorp%' "
                       "OR Variable_name LIKE 'innodb_encryption%'"]).stdout.strip()
@@ -250,8 +249,8 @@ def main():
     finally:
         # D - always put things back
         print("\nScenario D: restoring Vault access and network, restarting MariaDB...")
-        allow_vault()
         reconnect_network()
+        allow_vault()
         d_running, d_answering, d_secs = restart_and_wait(wait=90)
         print(f"  container running: {d_running}, server answering: {d_answering} ({d_secs:.0f}s)")
 
