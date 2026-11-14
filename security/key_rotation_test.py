@@ -119,6 +119,26 @@ def checksums():
             for name, value in sql(f"CHECKSUM TABLE {', '.join(TABLES)}")}
 
 
+CLEANUP = {}
+
+
+def cleanup():
+    """Always put MariaDB back, even if the test crashes or you press Ctrl+C.
+    Leaving innodb_encryption_threads on is exactly the state that crashed MariaDB
+    in vault_failure_test.py when Vault refused access."""
+    if "load" in CLEANUP:
+        CLEANUP["load"].finish()
+    if "old_threads" not in CLEANUP:
+        return
+    for stmt in (f"SET GLOBAL innodb_encryption_threads = {CLEANUP['old_threads']}",
+                 f"SET GLOBAL innodb_encryption_rotation_iops = {CLEANUP['old_iops']}",
+                 f"DROP TABLE IF EXISTS `{SCRATCH}`"):
+        try:
+            sql(stmt)
+        except Exception as e:
+            print(f"WARNING: cleanup step failed ({stmt}): {e}")
+
+
 def primary_key(table):
     col = sql("""SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE
                  WHERE TABLE_SCHEMA=%s AND TABLE_NAME=%s AND CONSTRAINT_NAME='PRIMARY'
@@ -190,10 +210,11 @@ class Load:
             self.written += 1
 
     def start(self):
-        self.threads = [threading.Thread(target=self._loop, args=("read", self.read_query))
+        self.threads = [threading.Thread(target=self._loop, args=("read", self.read_query), daemon=True)
                         for _ in range(READER_THREADS)]
         self.threads.append(threading.Thread(target=self._loop,
-                                             args=("write", self.write_query, self.count_write)))
+                                             args=("write", self.write_query, self.count_write),
+                                             daemon=True))
         for t in self.threads:
             t.start()
 
@@ -227,6 +248,7 @@ def main():
         sys.exit(f"ERROR: can't reach MariaDB on 127.0.0.1:3306. Is the 'mariadb' container running?\n{e}")
     old_threads = sql("SELECT @@innodb_encryption_threads")[0][0]
     old_iops = sql("SELECT @@innodb_encryption_rotation_iops")[0][0]
+    CLEANUP.update(old_threads=old_threads, old_iops=old_iops)
     pks = {t: primary_key(t) for t in TABLES}
     print(f"Vault key version now: {old_version}")
 
@@ -239,6 +261,7 @@ def main():
 
     load = Load(pks)
     load.start()
+    CLEANUP["load"] = load
     print(f"Load running ({READER_THREADS} readers + 1 writer). Baseline for {BASELINE_SECONDS}s...")
     time.sleep(BASELINE_SECONDS)
 
@@ -371,4 +394,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        cleanup()
