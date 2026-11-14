@@ -164,3 +164,4 @@ No key means no database, and no data is exposed. After access was restored, Mar
 - The plain control copy only contains `customers`. `accounts` and `transactions` were checked against their own text values, without a plain copy.
 - Vault failures were simulated (policy deny, network cut). A real Vault crash or seal was not tested, to avoid locking the Vault.
 - Each test was run once per configuration.
+- MariaDB fetches the key from Vault over plain HTTP (`http://host.docker.internal:8200`, no `vault_ca` set), so the key is not protected in transit between Vault and MariaDB. That is acceptable for a local Docker setup, but production should use HTTPS for Vault.

@@ -35,6 +35,8 @@ Errors seen:
 
 ## B. Vault unreachable, MariaDB running
 
+> **Note:** MariaDB had already crashed in scenario A and did not come back in time, so every check below failed because the server was down, not because the network was cut. Scenario B was not really tested in this run. See `failure_results.md` for scenario B with encryption threads off.
+
 | Time | read customers | read accounts | read transactions | write (insert) | create new table |
 |---|---|---|---|---|---|
 | 0s | FAIL | FAIL | FAIL | FAIL | FAIL |
