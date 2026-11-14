@@ -94,3 +94,49 @@ CURRENT_KEY_VERSION  5
 This confirmed successful Vault integration and online key rotation.
 
 Detailed Vault setup instructions, verification commands, and rotation results are available in `vault/README.md`.
+
+## Part 4: Security Testing (Person 4: YOUR NAME)
+
+This part checks whether the setup actually protects the data, and how it behaves during key rotation and when Vault fails. All tests ran on 2026-11-09 against the full data set (10,000 customers, 50,000 accounts, 1,000,000 transactions). The full method, numbers and recommendations are in [security/README.md](security/README.md).
+
+### Findings
+
+| # | Finding | Severity |
+|---|---|---|
+| 1 | Table files on disk are unreadable without the key: 0 of 114 real values found in the encrypted `.ibd` files, against 77 of 77 in an unencrypted copy. | Confirms encryption works |
+| 2 | Key rotation under load: 0 failed queries across reads and writes, identical checksums before and after, and all rows written during the test were saved. | Confirms rotation works |
+| 3 | **One rotation does not re-encrypt existing data.** With `innodb_encryption_rotate_key_age = 1`, data stays on the old key until it is more than one version behind. A key that leaked can still read the data until a second rotation. | **High** |
+| 4 | **MariaDB crashes if Vault refuses access while background encryption threads are running** (InnoDB assertion, signal 6). These threads are what key rotation turns on. | **High** (availability) |
+| 5 | With encryption threads off, MariaDB keeps serving reads and writes while Vault is down. Only operations that need a fresh key (creating a table) fail, and only when Vault actively refuses. | Good resilience |
+| 6 | MariaDB refuses to start without Vault ("fails closed"). It recovers in about 2 s with identical data once Vault is back. | Good security behaviour |
+
+### Before and after: the same bytes on disk
+
+The same offset in the `customers` table file, without and with encryption (from `security/before_after.txt`):
+
+```text
+Plain:      00010380  35 8f 16 da 31 36 30 20 42 61 75 65 72 20 48 6f  5...160 Bauer Ho
+            00010390  6c 6c 6f 77 0a 4d 61 72 69 61 66 75 72 74 2c 20  llow.Mariafurt,
+
+Encrypted:  00010380  d0 57 8a 16 b9 42 2e 9b ac 8e 41 5b 54 ec ff de  .W...B....A[T...
+            00010390  c4 e8 24 06 d0 e0 e2 fa 35 e3 93 bb ff 41 6a e8  ..$.....5....Aj.
+```
+
+### What this means in practice
+
+- **Rotate twice**, or set up rotation knowing that one rotation leaves existing data on the old key.
+- **Check Vault is healthy right before rotating**, and set `innodb_encryption_threads` back to 0 once no table is rotating, to keep the crash window from Finding 4 short.
+- **Monitor Vault errors.** A revoked token doesn't break running queries straight away, so it can go unnoticed until the next restart, when MariaDB won't start at all.
+- Encryption protects data **at rest** only. Anyone who logs into MariaDB with valid credentials still sees everything in clear text.
+
+### Running the tests
+
+With the project setup running (Vault unsealed, `mariadb` container up, data loaded), from the repo root:
+
+```bash
+python3 security/inspect_files.py        # Test 1, needs the plain control container (see security/README.md)
+python3 security/key_rotation_test.py    # Test 2, needs the vault CLI logged in
+python3 security/vault_failure_test.py   # Test 3, needs the vault CLI logged in
+```
+
+Each script writes its results into `security/` and puts the database and Vault back the way it found them, even if it is stopped part-way.
