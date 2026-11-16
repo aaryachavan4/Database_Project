@@ -30,7 +30,7 @@ path "sys/mounts/mariadb/tune" {
 }
 EOF
 
-vault policy write mariadb /tmp/mariadb-policy.hcl
+vault policy write mariadb-policy /tmp/mariadb-policy.hcl
 rm -f /tmp/mariadb-policy.hcl
 
 echo
@@ -54,8 +54,7 @@ echo "Vault setup complete."
 echo
 echo "To create a MariaDB Vault token, run:"
 echo
-echo "vault token create -policy=mariadb"
-
+echo "vault token create -policy=mariadb-policy"
 echo
 echo "Do not commit:"
 echo "- Vault tokens"
