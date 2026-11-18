@@ -26,7 +26,7 @@ vault kv put mariadb/1 data="$(openssl rand -hex 16)"
 
 ## 3. Create a token for MariaDB
 ```bash
-export MYSQL_ROOT_PASSWORD=root_password
+export MYSQL_ROOT_PASSWORD=your_password
 export MARIADB_VAULT_TOKEN=$(vault token create -policy=mariadb-policy -ttl=720h -field=token)
 ```
 Keep the token only in your terminal. Do not save it to a file or commit it. The `MYSQL_ROOT_PASSWORD` line is needed for the commands later in this README, so run it in every new terminal.
