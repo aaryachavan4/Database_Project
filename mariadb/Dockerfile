@@ -1,9 +1,8 @@
 FROM mariadb:13.0.2
-
 RUN apt-get update && \
     apt-get install -y mariadb-plugin-hashicorp-key-management && \
     rm -rf /var/lib/apt/lists/*
-
-COPY --chmod=644 hashicorp.cnf /etc/mysql/conf.d/hashicorp.cnf
+    
+COPY hashicorp.cnf /etc/mysql/conf.d/hashicorp.cnf
 
 EXPOSE 3306
