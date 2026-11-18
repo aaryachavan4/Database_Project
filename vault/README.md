@@ -39,21 +39,69 @@ mariadb/hashicorp.cnf
 
 ## Starting Vault
 
-Set the Vault address:
+### Setup Checklist
 
-```bash
-export VAULT_ADDR='http://127.0.0.1:8200'
-```
+Follow these steps in order when setting up the Vault integration.
 
-Start Vault:
+1. Start the Vault server from the project directory:
 
-```bash
-vault server -config=vault/config.hcl
-```
+   ```bash
+   vault server -config=vault/config.hcl
+   ```
 
-Vault must be unsealed before MariaDB can use it.
+   Keep this terminal running.
 
-Check the status:
+2. Open another terminal and set the Vault address:
+
+   ```bash
+   export VAULT_ADDR='http://127.0.0.1:8200'
+   ```
+
+3. Initialize Vault only on the first setup:
+
+   ```bash
+   vault operator init
+   ```
+
+   This command must only be run once for a new Vault storage directory.
+
+   Store the generated unseal keys and initial root token securely outside the repository.
+
+4. Unseal Vault using three different unseal keys:
+
+   ```bash
+   vault operator unseal
+   vault operator unseal
+   vault operator unseal
+   ```
+
+5. Log in to Vault using an authorized Vault token:
+
+   ```bash
+   vault login
+   ```
+
+6. Run the Vault setup script from the repository root:
+
+   ```bash
+   ./vault/setup.sh
+   ```
+
+   The script configures the MariaDB KV v2 secrets engine, creates the `mariadb-policy` policy, and creates the initial MariaDB encryption key only if the key does not already exist.
+
+7. Create a Vault token for MariaDB:
+
+   ```bash
+   vault token create -policy=mariadb-policy
+   ```
+
+8. Pass the generated token to the MariaDB startup process through the `VAULT_TOKEN` environment variable as required by the project startup script.
+
+Never commit Vault root tokens, MariaDB Vault tokens, Vault unseal keys, encryption key values, `.env` files, or `vault/data/`.
+
+### Checking Vault Status
+
+Check the current Vault status with:
 
 ```bash
 vault status
@@ -66,15 +114,13 @@ Initialized    true
 Sealed         false
 ```
 
-If Vault is sealed, run:
+If Vault has already been initialized but is sealed, unseal it using:
 
 ```bash
 vault operator unseal
 ```
 
-using the required number of different unseal keys.
-
-Vault tokens and unseal keys must never be committed to Git.
+with the required number of different unseal keys.
 
 ## Vault Secrets Engine
 
@@ -97,6 +143,28 @@ vault kv metadata get -mount=mariadb 1
 ```
 
 This shows key versions without displaying the secret value itself.
+
+## Vault Policy
+
+MariaDB uses the Vault policy:
+
+```text
+mariadb-policy
+```
+
+The policy only grants the permissions required by MariaDB:
+
+```hcl
+path "mariadb/data/*" {
+  capabilities = ["read"]
+}
+
+path "sys/mounts/mariadb/tune" {
+  capabilities = ["read"]
+}
+```
+
+MariaDB therefore has read-only access to the encryption keys and cannot create, update, or delete them.
 
 ## MariaDB Integration
 
@@ -136,10 +204,16 @@ encrypt_tmp_files=ON
 
 ## Verify the HashiCorp Plugin
 
-Run:
+Set the MariaDB root password in the environment before running the verification commands:
 
 ```bash
-docker exec mariadb mariadb -uroot -proot_password -e \
+export MYSQL_ROOT_PASSWORD='your_password'
+```
+
+Then run:
+
+```bash
+docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e \
 "SELECT PLUGIN_NAME, PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME LIKE 'hashicorp%';"
 ```
 
@@ -155,7 +229,7 @@ hashicorp_key_management_cache  ACTIVE
 Run:
 
 ```bash
-docker exec mariadb mariadb -uroot -proot_password -e \
+docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e \
 "SHOW VARIABLES LIKE 'innodb_encrypt%';"
 ```
 
@@ -177,9 +251,12 @@ vault/connection-test.py
 
 verifies the MariaDB encryption configuration, confirms that the HashiCorp key management plugin is active, and checks that the `customers`, `accounts`, and `transactions` tablespaces are encrypted.
 
+The script reads the MariaDB root password from the `MYSQL_ROOT_PASSWORD` environment variable.
+
 Run:
 
 ```bash
+export MYSQL_ROOT_PASSWORD='your_password'
 python vault/connection-test.py
 ```
 
