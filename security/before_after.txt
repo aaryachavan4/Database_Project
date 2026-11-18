@@ -1,0 +1,40 @@
+FILE INSPECTION RESULTS
+Run at: 2026-11-09 20:37:13
+Method: copied raw .ibd files out of each container and searched them for
+        real text values from up to 20 rows of each table.
+
+[ENCRYPTED] customers.ibd          3.1 MB    0/77  values found  -> PASS (nothing readable)
+[ENCRYPTED] accounts.ibd           7.3 MB    0/5   values found  -> PASS (nothing readable)
+[ENCRYPTED] transactions.ibd     151.0 MB    0/32  values found  -> PASS (nothing readable)
+[PLAIN    ] customers.ibd          9.4 MB   77/77  values found  -> readable, as expected
+            e.g. +1-351-324-1409x1711
+            e.g. +1-706-769-1733x5772
+            e.g. 001-290-308-7673
+            e.g. 001-459-342-7456
+            e.g. 001-508-231-3595x912
+
+==============================================================================
+BEFORE: plain customers.ibd, offset 0x10360 (where '+1-351-324-1409x1711' appears)
+==============================================================================
+00010360  65 74 2b 31 2d 33 35 31 2d 33 32 34 2d 31 34 30  et+1-351-324-140
+00010370  39 78 31 37 31 31 37 38 31 2d 37 39 2d 30 35 38  9x1711781-79-058
+00010380  35 8f 16 da 31 36 30 20 42 61 75 65 72 20 48 6f  5...160 Bauer Ho
+00010390  6c 6c 6f 77 0a 4d 61 72 69 61 66 75 72 74 2c 20  llow.Mariafurt, 
+000103a0  4d 53 20 32 33 31 31 31 6a f2 1c 00 1f 0b 12 16  MS 23111j.......
+000103b0  07 04 00 00 00 40 00 81 80 00 00 07 00 00 00 00  .....@..........
+000103c0  00 00 80 00 00 00 00 00 00 52 79 61 6e 42 75 72  .........RyanBur
+000103d0  6e 65 74 74 6d 69 63 68 65 6c 6c 65 34 34 40 65  nettmichelle44@e
+
+==============================================================================
+AFTER: encrypted customers.ibd, same offset 0x10360
+==============================================================================
+00010360  e1 68 86 fe 48 1e 25 13 c9 8d 8f 82 ff 07 02 69  .h..H.%........i
+00010370  98 76 d8 90 02 42 3c b6 74 14 1a ed 05 25 35 90  .v...B<.t....%5.
+00010380  d0 57 8a 16 b9 42 2e 9b ac 8e 41 5b 54 ec ff de  .W...B....A[T...
+00010390  c4 e8 24 06 d0 e0 e2 fa 35 e3 93 bb ff 41 6a e8  ..$.....5....Aj.
+000103a0  2c 36 64 9e 08 b4 18 6c 48 14 7b 60 c4 de 9f af  ,6d....lH.{`....
+000103b0  9d 21 e9 97 9c 43 cc 0a 34 3b f8 2c 9c df 96 9a  .!...C..4;.,....
+000103c0  8e 26 f2 56 2a 57 37 e9 d3 e5 28 43 d6 fc ab 5d  .&.V*W7...(C...]
+000103d0  bb 01 b7 11 c0 c7 1a 4b dd 8b 75 5a 5b 0c f1 51  .......K..uZ[..Q
+
+VERDICT: PASS - all encrypted table files are unreadable; the plain copy leaks everything.

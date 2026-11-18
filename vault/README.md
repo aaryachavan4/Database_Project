@@ -14,7 +14,7 @@ The active Vault KV v2 mount is:
 mariadb/
 ```
 
-The MariaDB encryption key is stored under key ID:
+The MariaDB encryption key is stored under:
 
 ```text
 mariadb/1
@@ -22,10 +22,11 @@ mariadb/1
 
 ## Files
 
-The main files used for the Vault integration are:
+The main Vault-related files are:
 
 ```text
 vault/config.hcl
+vault/setup.sh
 vault/connection-test.py
 vault/README.md
 ```
@@ -50,7 +51,7 @@ Start Vault:
 vault server -config=vault/config.hcl
 ```
 
-Vault must be initialized and unsealed before MariaDB can use it.
+Vault must be unsealed before MariaDB can use it.
 
 Check the status:
 
@@ -65,52 +66,37 @@ Initialized    true
 Sealed         false
 ```
 
-If Vault is sealed, unseal it using:
+If Vault is sealed, run:
 
 ```bash
 vault operator unseal
 ```
 
-The command must be executed using the required number of different unseal keys.
+using the required number of different unseal keys.
 
-Unseal keys and Vault tokens must never be stored in Git.
+Vault tokens and unseal keys must never be committed to Git.
 
-## Vault Secrets Engines
+## Vault Secrets Engine
 
-The project uses two Vault secrets engines:
+The MariaDB integration uses a Vault KV v2 secrets engine mounted at:
 
 ```text
-mariadb/   KV v2
-transit/   Transit
+mariadb/
 ```
 
-The MariaDB HashiCorp plugin uses the `mariadb/` KV v2 engine for the real database encryption key.
-
-The Transit engine is also configured as part of the project environment.
-
-Available secrets engines can be checked using:
-
-```bash
-vault secrets list
-```
-
-## MariaDB Key
-
-The MariaDB encryption key is stored at:
+The encryption key used by MariaDB is stored at:
 
 ```text
 mariadb/1
 ```
 
-The metadata can be checked without displaying the actual encryption key:
+The key metadata can be checked safely with:
 
 ```bash
 vault kv metadata get -mount=mariadb 1
 ```
 
-This shows the current key version and the history of previous versions.
-
-The actual secret value should not be printed or shared.
+This shows key versions without displaying the secret value itself.
 
 ## MariaDB Integration
 
@@ -120,7 +106,7 @@ MariaDB loads the HashiCorp key management plugin using:
 plugin_load_add=hashicorp_key_management.so
 ```
 
-The Vault endpoint is configured using:
+The Vault endpoint is configured as:
 
 ```ini
 hashicorp-key-management-vault-url=http://host.docker.internal:8200/v1/mariadb
@@ -132,13 +118,13 @@ Key caching is enabled:
 hashicorp-key-management-caching-enabled=ON
 ```
 
-The MariaDB Docker container receives its Vault authentication token through the `VAULT_TOKEN` environment variable.
+MariaDB receives its Vault token through the `VAULT_TOKEN` environment variable.
 
-The token is not stored directly inside `hashicorp.cnf`.
+The token is not stored directly in `hashicorp.cnf`.
 
 ## Encryption Configuration
 
-The MariaDB encryption configuration includes:
+MariaDB encryption is enabled with:
 
 ```ini
 innodb_encrypt_tables=FORCE
@@ -148,11 +134,9 @@ encrypt_tmp_disk_tables=ON
 encrypt_tmp_files=ON
 ```
 
-This enables encryption for InnoDB tables, logs, temporary tables, and temporary files.
-
 ## Verify the HashiCorp Plugin
 
-The plugin status can be checked using:
+Run:
 
 ```bash
 docker exec mariadb mariadb -uroot -proot_password -e \
@@ -191,7 +175,7 @@ The file:
 vault/connection-test.py
 ```
 
-is used to verify that the encrypted MariaDB database is available and that the project tables can still be queried successfully.
+verifies the MariaDB encryption configuration, confirms that the HashiCorp key management plugin is active, and checks that the `customers`, `accounts`, and `transactions` tablespaces are encrypted.
 
 Run:
 
@@ -199,14 +183,92 @@ Run:
 python vault/connection-test.py
 ```
 
-The test checks the database connection and reads rows from:
+Expected successful output includes:
 
 ```text
-customers
-accounts
-transactions
+PASS innodb_encrypt_tables is ON or FORCE
+PASS hashicorp plugin is active
+PASS customers is encrypted
+PASS accounts is encrypted
+PASS transactions is encrypted
+All checks passed
 ```
 
 ## Week 3: Key Rotation Test
 
-A live key rotation test was performed using the Vault
+A live key rotation test was performed using the Vault KV v2 key stored at:
+
+```text
+mariadb/1
+```
+
+Before rotation:
+
+```text
+Vault current key version:   3
+MariaDB cached key version:  3
+```
+
+New key versions were created in Vault.
+
+After the rotation process, Vault reported:
+
+```text
+current_version = 5
+```
+
+MariaDB continued to serve both read and write queries without requiring a server restart.
+
+The encrypted tablespace metadata was checked using:
+
+```sql
+SELECT NAME,
+       CURRENT_KEY_ID,
+       CURRENT_KEY_VERSION,
+       MIN_KEY_VERSION
+FROM information_schema.INNODB_TABLESPACES_ENCRYPTION
+WHERE NAME LIKE 'encryption_test/%';
+```
+
+The result showed:
+
+| Table | Current Key ID | Current Key Version | Minimum Key Version |
+|---|---:|---:|---:|
+| customers | 1 | 5 | 3 |
+| accounts | 1 | 5 | 3 |
+| transactions | 1 | 5 | 3 |
+
+This confirmed that all three encrypted tablespaces recognized key version 5 as the current encryption key version.
+
+A test customer row was inserted after rotation and successfully read back from the database. The test row was deleted afterward.
+
+### Rotation Behavior
+
+The project uses:
+
+```text
+innodb_encryption_rotate_key_age = 1
+```
+
+Testing showed that creating only one newer key version was not sufficient to move all existing encrypted data to the new version. Two key-version updates were required before the tablespaces reported the newer current key version.
+
+### Vault Failure Behavior
+
+With Vault unavailable, MariaDB continued to serve normal reads and writes while the required encryption key was already cached.
+
+However, later security testing showed an important limitation: if Vault becomes unavailable while active encryption-rotation threads require access to the key manager, MariaDB can fail.
+
+Therefore, Vault caching improves availability during a normal temporary Vault outage, but Vault availability is still important during active key rotation.
+
+## Security Notes
+
+Do not commit or share:
+
+- Vault root tokens
+- MariaDB Vault tokens
+- Vault unseal keys
+- encryption key values
+- `.env` files
+- `vault/data/`
+
+Only configuration files, scripts, and documentation should be committed.
