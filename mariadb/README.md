@@ -75,3 +75,4 @@ docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SELECT SPACE, NA
 - `hashicorp.cnf` holds settings only. The token is passed at run time.
 - Each Vault has its own key. Data encrypted with one Vault's key can't be read with another's.
 - `SET GLOBAL` settings reset when the container restarts, so run them again after a restart.
+- `load_data.py` generates the sample data with Faker and replaces the `data.sql` file from the project plan. `start.sh` runs it automatically.
