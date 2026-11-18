@@ -10,3 +10,6 @@ innodb_encrypt_log=ON
 innodb_encrypt_temporary_tables=ON
 encrypt_tmp_disk_tables=ON
 encrypt_tmp_files=ON
+
+log_bin=mysql-bin
+encrypt_binlog=ON
