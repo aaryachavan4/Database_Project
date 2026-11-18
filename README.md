@@ -8,7 +8,13 @@ Setup: see [mariadb/README.md](mariadb/README.md) for the database and [vault/RE
 
 ## Quick start
 1. Start Vault and unseal it (see `vault/README.md`).
-2. From the project root, run:
+2. Set the root password for this session:
+
+   ```bash
+   export MYSQL_ROOT_PASSWORD=your_password
+   ```
+
+3. From the project root, run:
 
    ```bash
    bash mariadb/start.sh
@@ -21,6 +27,15 @@ The script builds the image, starts MariaDB with your Vault token, loads the sch
 Tested on macOS (Docker Desktop) and WSL2 Ubuntu with Docker Desktop. Run all commands in a bash-compatible shell. Native Linux is not tested. `start.sh` adds `--add-host=host.docker.internal:host-gateway`, which lets the container reach Vault on Linux.
 
 Each person ran the tests on their own Vault, so the version numbers in each part belong to that person's setup and don't need to match.
+
+## Key Findings
+
+- **Encryption works:** the encrypted table files contain none of the real values, while an unencrypted copy of the same data leaks all of them. The encrypted files had 0 of 114 values readable, against 77 of 77 in the unencrypted copy (Part 4).
+- **Rotation under load is safe:** rotating the key while reads and writes were running caused 0 failed queries, and the data checksums were identical before and after (Part 4).
+- **One rotation is not enough:** existing data stays on the old key until a second rotation (Part 1 and Part 4).
+- **Threads plus a Vault refusal can crash MariaDB:** if Vault refuses access while encryption threads are running, MariaDB crashed (Part 4).
+- **Vault outages are survivable, with limits:** cached keys keep reads and writes working while Vault is down, but MariaDB won't start without Vault (Part 4).
+
 
 ## Part 1: MariaDB Setup (Person 1: Zoya)
 
@@ -36,6 +51,8 @@ The database has three tables. Each account belongs to one customer through `acc
 
 Setup steps are in `mariadb/README.md`. Table encryption is set in `mariadb/hashicorp.cnf` with `innodb_encrypt_tables=FORCE`. The tables were encrypted with `encrypted-config.sql`, and all three report `ENCRYPTION_SCHEME` 1.
 
+The binary log is also encrypted (`log_bin=mysql-bin` and `encrypt_binlog=ON` in `mariadb/hashicorp.cnf`). The check is `SHOW VARIABLES LIKE 'encrypt_binlog';`, which should return `ON`.
+
 ### Key rotation test (Zoya's Vault)
 
 - Key `mariadb/1` was rotated from version 2 to version 3 at 21:05:07 CET, while `continuous_writes.py` was running. Vault records version 3 as created at 21:05:07 CET. The times were recorded manually and are not in `rotation_writes.log`.
@@ -44,6 +61,8 @@ Setup steps are in `mariadb/README.md`. Table encryption is set in `mariadb/hash
 - In our run, re-encryption of `transactions` finished at about 21:14 CET, roughly 9.5 minutes after the rotation (recorded manually). It needs `innodb_encryption_threads` above 0.
 - Aarya's test (`security/rotation_results.txt`) found that one key update was not enough to re-encrypt existing data. Two updates were needed before the tablespaces reported the new current version. The 9.5-minute figure above should be read with that in mind.
 - The test rows were removed by rebuilding the database. The current tables were created with key version 3, which matches `CURRENT_KEY_VERSION` 3 and `MIN_KEY_VERSION` 3 in the database now.
+
+![Key rotation under load](images/rotation-results.png)
 
 ## Part 2: Vault Integration (Person 2: Durgesh)
 
@@ -110,6 +129,10 @@ This part checks whether the setup actually protects the data, and how it behave
 | 4 | **MariaDB crashes if Vault refuses access while background encryption threads are running** (InnoDB assertion, signal 6). These threads are what key rotation turns on. | **High** (availability) |
 | 5 | With encryption threads off, MariaDB keeps serving reads and writes while Vault is down. Only operations that need a fresh key (creating a table) fail, and only when Vault actively refuses. | Good resilience |
 | 6 | MariaDB refuses to start without Vault ("fails closed"). It recovers in about 2 s with identical data once Vault is back. | Good security behaviour |
+
+![Vault refusal results](images/vault-failure.png)
+
+![Before and after hex dump](images/before-after.png)
 
 ### Before and after: the same bytes on disk
 

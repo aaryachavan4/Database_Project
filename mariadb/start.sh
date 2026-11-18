@@ -6,7 +6,7 @@ set -euo pipefail
 # Usage: bash mariadb/start.sh
 
 cd "$(dirname "$0")"
-export MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-root_password}"
+: "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD first: export MYSQL_ROOT_PASSWORD=your_password}"
 export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
 IMAGE=mariadb-encryption
 CONTAINER=mariadb
