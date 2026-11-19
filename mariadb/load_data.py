@@ -64,7 +64,7 @@ if len(account_ids) == 0:
 print(f"Loading transactions (1M rows, using {len(account_ids)} account IDs)...")
 merchants = ['Starbucks', 'Amazon', 'Walmart', 'Target', 'Apple', 'Netflix', 'Uber', 'PayPal', 'Best Buy', 'Whole Foods']
 
-for i in range(1000000):
+for i in range(500000):
     try:
         account_id = random.choice(account_ids)
         cursor.execute(

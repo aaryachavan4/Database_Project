@@ -1,0 +1,133 @@
+{
+  "mode": "cold",
+  "started": "2026-11-19T15:47:40",
+  "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+    "python": "3.14.7",
+    "cpu_count": 12
+  },
+  "args": {
+    "mode": "cold",
+    "baseline": "127.0.0.1:3306",
+    "encrypted": "127.0.0.1:3307",
+    "user": "root",
+    "db": "encryption_test",
+    "runs": 10,
+    "warmup": 1,
+    "rep_scale": 1.0,
+    "only": null,
+    "max_slow_reps": 1,
+    "threads": [
+      1,
+      8
+    ],
+    "tp_seconds": 15,
+    "tp_rounds": 3,
+    "seed": "42"
+  },
+  "servers": {
+    "baseline": {
+      "variables": {
+        "encrypt_binlog": "OFF",
+        "encrypt_tmp_disk_tables": "OFF",
+        "encrypt_tmp_files": "OFF",
+        "innodb_buffer_pool_size": "33554432",
+        "innodb_data_file_buffering": "OFF",
+        "innodb_encrypt_log": "OFF",
+        "innodb_encrypt_tables": "OFF",
+        "innodb_encrypt_temporary_tables": "OFF",
+        "innodb_encryption_threads": "0",
+        "innodb_flush_log_at_trx_commit": "1",
+        "innodb_flush_method": "unbuffered",
+        "innodb_log_file_size": "100663296",
+        "log_bin": "ON",
+        "version": "13.0.2-MariaDB-log"
+      },
+      "encryption_plugins": {},
+      "rows": {
+        "customers": 10000,
+        "accounts": 50000,
+        "transactions": 1000000
+      },
+      "tablespace_encryption": {},
+      "tablespace_bytes": {
+        "encryption_test/customers": {
+          "file_size": 3145728,
+          "allocated": 3145728
+        },
+        "encryption_test/accounts": {
+          "file_size": 7340032,
+          "allocated": 7340032
+        },
+        "encryption_test/transactions": {
+          "file_size": 150994944,
+          "allocated": 150994944
+        }
+      }
+    },
+    "encrypted": {
+      "variables": {
+        "encrypt_binlog": "ON",
+        "encrypt_tmp_disk_tables": "ON",
+        "encrypt_tmp_files": "ON",
+        "innodb_buffer_pool_size": "33554432",
+        "innodb_data_file_buffering": "OFF",
+        "innodb_encrypt_log": "ON",
+        "innodb_encrypt_tables": "FORCE",
+        "innodb_encrypt_temporary_tables": "ON",
+        "innodb_encryption_threads": "0",
+        "innodb_flush_log_at_trx_commit": "1",
+        "innodb_flush_method": "unbuffered",
+        "innodb_log_file_size": "100663296",
+        "log_bin": "ON",
+        "version": "13.0.2-MariaDB-log"
+      },
+      "encryption_plugins": {
+        "hashicorp_key_management": "ACTIVE"
+      },
+      "rows": {
+        "customers": 10000,
+        "accounts": 50000,
+        "transactions": 1000000
+      },
+      "tablespace_encryption": {
+        "encryption_test/customers": {
+          "scheme": 1,
+          "key_id": 1,
+          "key_version": 1
+        },
+        "encryption_test/accounts": {
+          "scheme": 1,
+          "key_id": 1,
+          "key_version": 1
+        },
+        "encryption_test/transactions": {
+          "scheme": 1,
+          "key_id": 1,
+          "key_version": 1
+        }
+      },
+      "tablespace_bytes": {
+        "encryption_test/customers": {
+          "file_size": 3145728,
+          "allocated": 3145728
+        },
+        "encryption_test/accounts": {
+          "file_size": 7340032,
+          "allocated": 7340032
+        },
+        "encryption_test/transactions": {
+          "file_size": 150994944,
+          "allocated": 150994944
+        }
+      }
+    }
+  },
+  "errors": {
+    "baseline": 0,
+    "encrypted": 0
+  },
+  "finished": "2026-11-19T15:51:42",
+  "duration_s": 242.5
+}
