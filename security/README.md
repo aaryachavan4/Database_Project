@@ -23,11 +23,11 @@ All tests were run on 2026-11-09 against the project setup (MariaDB in Docker, V
 - For `inspect_files.py` only: a second, unencrypted container for comparison:
 
 ```bash
-docker run --name mariadb-plain -e MYSQL_ROOT_PASSWORD=root_password -p 3307:3306 -d mariadb:latest
+docker run --name mariadb-plain -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" -p 3307:3306 -d mariadb:latest
 sleep 20
-docker exec mariadb-plain mariadb -uroot -proot_password -e "CREATE DATABASE encryption_test;"
-docker exec mariadb mariadb-dump -uroot -proot_password encryption_test customers \
-  | docker exec -i mariadb-plain mariadb -uroot -proot_password encryption_test
+docker exec mariadb-plain mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE encryption_test;"
+docker exec mariadb mariadb-dump -uroot -p"$MYSQL_ROOT_PASSWORD" encryption_test customers \
+  | docker exec -i mariadb-plain mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" encryption_test
 ```
 
 Run every script from the repo root, e.g. `python3 security/inspect_files.py`.

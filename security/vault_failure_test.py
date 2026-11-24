@@ -41,7 +41,7 @@ from pathlib import Path
 
 CONTAINER = "mariadb"
 DB = "encryption_test"
-PASSWORD = os.environ.get("MYSQL_ROOT_PASSWORD", "root_password")
+PASSWORD = os.environ["MYSQL_ROOT_PASSWORD"]
 SCRATCH = "vault_failure_scratch"
 HOLD_SECONDS = 90      # how long to keep Vault "down" in A and B (longer than the plugin's default 60s key cache)
 CHECK_EVERY = 30
