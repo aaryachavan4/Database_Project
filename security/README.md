@@ -2,7 +2,7 @@
 
 Person 4 (Security Owner). This folder tests whether the MariaDB + HashiCorp Vault setup from `mariadb/` and `vault/` actually protects the data, and how it behaves during key rotation and Vault failures.
 
-All tests were run on 2026-11-09 against the project setup (MariaDB in Docker, Vault on the host, 10,000 customers / 50,000 accounts / 1,000,000 transactions).
+Tests 1 and 2 and the threads = 4 run of Test 3 were run on 2026-11-09. The threads = 0 run of Test 3 (`failure_results.md`) was re-run on 2026-11-24 on a freshly started container, so that scenario B starts with MariaDB running. All runs used the project setup (MariaDB in Docker, Vault on the host, 10,000 customers / 50,000 accounts / 1,000,000 transactions).
 
 ## Summary of findings
 
@@ -23,11 +23,11 @@ All tests were run on 2026-11-09 against the project setup (MariaDB in Docker, V
 - For `inspect_files.py` only: a second, unencrypted container for comparison:
 
 ```bash
-docker run --name mariadb-plain -e MYSQL_ROOT_PASSWORD=root_password -p 3307:3306 -d mariadb:latest
+docker run --name mariadb-plain -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" -p 3307:3306 -d mariadb:latest
 sleep 20
-docker exec mariadb-plain mariadb -uroot -proot_password -e "CREATE DATABASE encryption_test;"
-docker exec mariadb mariadb-dump -uroot -proot_password encryption_test customers \
-  | docker exec -i mariadb-plain mariadb -uroot -proot_password encryption_test
+docker exec mariadb-plain mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE encryption_test;"
+docker exec mariadb mariadb-dump -uroot -p"$MYSQL_ROOT_PASSWORD" encryption_test customers \
+  | docker exec -i mariadb-plain mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" encryption_test
 ```
 
 Run every script from the repo root, e.g. `python3 security/inspect_files.py`.
@@ -109,6 +109,8 @@ At the same offset in the file, the plain copy shows a phone number, an SSN and 
 - **Unreachable:** the MariaDB container disconnected from the network (like Vault crashing or a network outage)
 
 Every 30 seconds for 90 seconds, the script ran: reads on all three tables, an insert, and creating a new (encrypted) table. Queries go through `docker exec`, so they still work while the network is cut. Everything is restored at the end, even on errors.
+
+The threads = 0 column is from the re-run on 2026-11-24, with `innodb_encryption_threads = 0` set before the run. MariaDB was still running after scenario A, so scenario B is a valid test. The threads = 4 column is from 2026-11-09, where B could not be tested because MariaDB had already crashed in A.
 
 **Results:**
 

@@ -48,7 +48,7 @@ from pathlib import Path
 import pymysql
 
 DB = "encryption_test"
-PASSWORD = os.environ.get("MYSQL_ROOT_PASSWORD", "root_password")
+PASSWORD = os.environ["MYSQL_ROOT_PASSWORD"]
 TABLES = ["customers", "accounts", "transactions"]
 SCRATCH = "rotation_load_test"
 

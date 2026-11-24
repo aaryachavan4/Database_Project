@@ -28,7 +28,7 @@ from datetime import datetime
 from pathlib import Path
  
 DB = "encryption_test"
-PASSWORD = os.environ.get("MYSQL_ROOT_PASSWORD", "root_password")
+PASSWORD = os.environ["MYSQL_ROOT_PASSWORD"]
  
 ENCRYPTED = "mariadb"
 PLAIN = "mariadb-plain"
