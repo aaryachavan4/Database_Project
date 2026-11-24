@@ -9,14 +9,20 @@ cd "$(dirname "$0")"
 : "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD first: export MYSQL_ROOT_PASSWORD=your_password}"
 export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
 IMAGE=mariadb-encryption
-CONTAINER=mariadb
+CONTAINER="${CONTAINER:-mariadb}"
 
 run_sql() {
   docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" "$CONTAINER" mariadb -uroot "$@"
 }
 
 echo "1. Checking Vault..."
-if ! vault status >/dev/null 2>&1; then
+if ! command -v vault >/dev/null 2>&1; then
+  if [ -z "${MARIADB_VAULT_TOKEN:-}" ]; then
+    echo "vault CLI not found. Install it, or export MARIADB_VAULT_TOKEN=<token> and run again." >&2
+    exit 1
+  fi
+  echo "vault CLI not found; using MARIADB_VAULT_TOKEN from the environment."
+elif ! vault status >/dev/null 2>&1; then
   echo "Vault is not reachable or is sealed. Start and unseal it first (see vault/README.md)." >&2
   exit 1
 fi
