@@ -130,7 +130,7 @@ This confirmed successful Vault integration and online key rotation.
 
 Detailed Vault setup instructions, verification commands, and rotation results are available in `vault/README.md`.
 
-## Part 4: Security Testing (Person 4: YOUR NAME)
+## Part 4: Security Testing (Person 4: Aarya)
 
 This part checks whether the setup actually protects the data, and how it behaves during key rotation and when Vault fails. All tests ran on 2026-11-09 against the full data set (10,000 customers, 50,000 accounts, 1,000,000 transactions). The full method, numbers and recommendations are in [security/README.md](security/README.md).
 
