@@ -10,6 +10,7 @@ cd "$(dirname "$0")"
 export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
 IMAGE=mariadb-encryption
 CONTAINER="${CONTAINER:-mariadb}"
+
 run_sql() {
   docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" "$CONTAINER" mariadb -uroot "$@"
 }

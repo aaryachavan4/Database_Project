@@ -7,7 +7,7 @@ This project encrypts the tables of a MariaDB database at rest, with the encrypt
 Setup: see [mariadb/README.md](mariadb/README.md) for the database and [vault/README.md](vault/README.md) for Vault.
 
 ## Quick start
-1. Start Vault and unseal it (see `vault/README.md`).
+1. Start Vault and unseal it (see `vault/README.md`). The Vault CLI is needed to create a token. If you don't have it installed, create a token yourself and export it first with `export MARIADB_VAULT_TOKEN=<token>`.
 2. Set the root password for this session:
 
    ```bash
@@ -20,7 +20,7 @@ Setup: see [mariadb/README.md](mariadb/README.md) for the database and [vault/RE
    bash mariadb/start.sh
    ```
 
-The script builds the image, starts MariaDB with your Vault token, loads the schema and the sample data, and checks that encryption is on. It ends with `Done. MariaDB is running with encryption on.` It removes and recreates the `mariadb` container on every run, so existing data is reset.
+The script builds the image, starts MariaDB with your Vault token, loads the schema and the sample data, and checks that encryption is on. It ends with `Done. MariaDB is running with encryption on.` It removes and recreates the `mariadb` container on every run, so existing data is reset. If `MARIADB_VAULT_TOKEN` is set, the script skips the Vault health check, so make sure Vault is running before you start.
 
 ## Platforms
 
