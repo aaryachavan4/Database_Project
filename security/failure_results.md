@@ -71,3 +71,6 @@ Relevant MariaDB log lines:
   - start: `encryption_test.customers	2113953775 encryption_test.accounts	1869731828 encryption_test.transactions	771748433`
   - end: `encryption_test.customers	2113953775 encryption_test.accounts	1869731828 encryption_test.transactions	771748433`
 
+## Known MariaDB bug
+
+With `innodb_encryption_threads = 4` (see `failure_results_threads4.md` and `crash_log_threads4.txt`), MariaDB crashed in scenario A with `InnoDB: Failing assertion: key_version != ENCRYPTION_KEY_VERSION_INVALID` in `fil0crypt.cc`. This matches the open MariaDB bug [MDEV-38141](https://jira.mariadb.org/browse/MDEV-38141): the same assertion, reproduced with the Hashicorp key management plugin, `innodb-encryption-threads=4` and `innodb-encryption-rotate-key-age=1`. The same assertion has also been reported before with other key plugins (e.g. [MDEV-9948](https://jira.mariadb.org/browse/MDEV-9948)).
