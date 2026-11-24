@@ -1,6 +1,6 @@
 # Vault Failure Test Results
 
-Run at: 2026-11-09 21:52:34
+Run at: 2026-11-24 18:44:39
 
 Vault was never stopped or sealed. Failures were simulated by temporarily denying MariaDB's Vault policy (refused) or disconnecting the MariaDB container from the network (unreachable). Each check: reads on all three tables, an insert, and creating a new encrypted table.
 
@@ -38,7 +38,7 @@ Errors seen:
 | Time | read customers | read accounts | read transactions | write (insert) | create new table |
 |---|---|---|---|---|---|
 | 0s | OK | OK | OK | OK | OK |
-| 30s | OK | OK | OK | OK | OK |
+| 31s | OK | OK | OK | OK | OK |
 | 61s | OK | OK | OK | OK | OK |
 | 92s | OK | OK | OK | OK | OK |
 
@@ -49,14 +49,14 @@ Errors seen:
 
 Relevant MariaDB log lines:
 ```
-2026-11-09 20:51:29 0 [ERROR] Plugin 'hashicorp_key_management' init function returned error.
-2026-11-09 20:51:29 0 [ERROR] Plugin 'hashicorp_key_management' registration as a ENCRYPTION failed.
-2026-11-09 20:51:29 0 [ERROR] InnoDB: cannot enable encryption, encryption plugin is not available
-2026-11-09 20:51:29 0 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
-2026-11-09 20:51:29 0 [ERROR] Plugin 'hashicorp_key_management_cache' init function returned error.
-2026-11-09 20:51:29 0 [ERROR] Plugin 'hashicorp_key_management_cache' registration as a INFORMATION SCHEMA failed.
-2026-11-09 20:51:29 0 [ERROR] Failed to enable encryption of temporary files
-2026-11-09 20:51:29 0 [ERROR] Aborting
+2026-11-24 17:43:34 0 [ERROR] Plugin 'hashicorp_key_management' init function returned error.
+2026-11-24 17:43:34 0 [ERROR] Plugin 'hashicorp_key_management' registration as a ENCRYPTION failed.
+2026-11-24 17:43:34 0 [ERROR] InnoDB: cannot enable encryption, encryption plugin is not available
+2026-11-24 17:43:34 0 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+2026-11-24 17:43:34 0 [ERROR] Plugin 'hashicorp_key_management_cache' init function returned error.
+2026-11-24 17:43:34 0 [ERROR] Plugin 'hashicorp_key_management_cache' registration as a INFORMATION SCHEMA failed.
+2026-11-24 17:43:34 0 [ERROR] Failed to enable encryption of temporary files
+2026-11-24 17:43:34 0 [ERROR] Aborting
 ```
 
 ## D. Recovery (access restored, MariaDB restarted)
@@ -68,6 +68,6 @@ Relevant MariaDB log lines:
 | 0s | OK | OK | OK | OK | OK |
 
 - Data unchanged (CHECKSUM TABLE start vs end): **YES**
-  - start: `encryption_test.customers	1483823331 encryption_test.accounts	885270237 encryption_test.transactions	4099005701`
-  - end: `encryption_test.customers	1483823331 encryption_test.accounts	885270237 encryption_test.transactions	4099005701`
+  - start: `encryption_test.customers	2113953775 encryption_test.accounts	1869731828 encryption_test.transactions	771748433`
+  - end: `encryption_test.customers	2113953775 encryption_test.accounts	1869731828 encryption_test.transactions	771748433`
 

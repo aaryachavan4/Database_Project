@@ -132,7 +132,7 @@ Detailed Vault setup instructions, verification commands, and rotation results a
 
 ## Part 4: Security Testing (Person 4: Aarya)
 
-This part checks whether the setup actually protects the data, and how it behaves during key rotation and when Vault fails. All tests ran on 2026-11-09 against the full data set (10,000 customers, 50,000 accounts, 1,000,000 transactions). The full method, numbers and recommendations are in [security/README.md](security/README.md).
+This part checks whether the setup actually protects the data, and how it behaves during key rotation and when Vault fails. The tests ran on 2026-11-09, and the Vault failure test with encryption threads off was re-run on 2026-11-24, both against the full data set (10,000 customers, 50,000 accounts, 1,000,000 transactions). The full method, numbers and recommendations are in [security/README.md](security/README.md).
 
 ### Findings
 
