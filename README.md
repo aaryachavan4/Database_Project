@@ -66,6 +66,7 @@ Each person ran the tests on their own Vault, so the version numbers in each par
 | Rotation writes and latency | `mariadb/rotation_writes.log` |
 | Performance overhead | `performance/analysis.md`, `performance/results/summary.md` |
 | Vault setup and checks | `vault/README.md` |
+
 ## Team and method
 
 **Team:**
@@ -115,7 +116,7 @@ HashiCorp Vault is used as the external key management system for MariaDB data-a
 
 The MariaDB `hashicorp_key_management` plugin connects to a Vault KV v2 secrets engine mounted at `mariadb/`. The database encryption key is stored under key ID `1` at `mariadb/1`.
 
-MariaDB receives its Vault authentication token through the `VAULT_TOKEN` environment variable. Vault tokens, unseal keys, and encryption key values are not stored in the repository.
+MariaDB receives its Vault authentication token through the `MARIADB_VAULT_TOKEN` environment variable. Vault tokens, unseal keys, and encryption key values are not stored in the repository.
 
 The HashiCorp integration was verified successfully. Both MariaDB plugins were active:
 

@@ -18,7 +18,7 @@ Run as the Vault owner, using the root token:
 ```bash
 vault secrets enable -path=mariadb -version=2 kv
 vault policy write mariadb-policy - <<'EOF'
-path "mariadb/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+path "mariadb/data/*" { capabilities = ["read"] }
 path "sys/mounts/mariadb/tune" { capabilities = ["read"] }
 EOF
 vault kv put mariadb/1 data="$(openssl rand -hex 16)"
@@ -46,7 +46,17 @@ The script builds the image, starts MariaDB with your Vault token, loads the sch
 - The connection check prints PASS for each table and ends with `All checks passed`.
 
 ## Key rotation
-To rotate the key, write a new version to Vault, then flush MariaDB's key cache:
+The quickest way is `rotate.sh`. It needs an admin Vault token, because the MariaDB token is read-only and can't write new keys:
+
+```bash
+export VAULT_TOKEN=<admin token>
+export MYSQL_ROOT_PASSWORD=<your MariaDB root password>
+bash mariadb/rotate.sh
+```
+
+Existing data only moves to the new key after a second rotation, so run `rotate.sh` twice, waiting for re-encryption to finish in between.
+
+To rotate by hand (the same steps `rotate.sh` runs), make sure `VAULT_TOKEN` holds the admin token from above, then write a new version to Vault and flush MariaDB's key cache:
 ```bash
 export VAULT_ADDR='http://127.0.0.1:8200'
 vault kv put mariadb/1 data="$(openssl rand -hex 16)"
