@@ -7,21 +7,11 @@ This project encrypts the tables of a MariaDB database at rest, with the encrypt
 Setup: see [mariadb/README.md](mariadb/README.md) for the database and [vault/README.md](vault/README.md) for Vault.
 
 ## Quick start
-1. Start Vault and unseal it (see `vault/README.md`).
-2. Set the root password for this session:
+
+1. Start the Vault server:
 
    ```bash
-   export MYSQL_ROOT_PASSWORD=your_password
-   ```
-
-3. From the project root, run:
-
-   ```bash
-   bash mariadb/start.sh
-   ```
-
-The script builds the image, starts MariaDB with your Vault token, loads the schema and the sample data, and checks that encryption is on. It ends with `Done. MariaDB is running with encryption on.` It removes and recreates the `mariadb` container on every run, so existing data is reset.
-
+   vault server -config=vault/config.hcl
 ## Platforms
 
 Tested on macOS (Docker Desktop) and WSL2 Ubuntu with Docker Desktop. Run all commands in a bash-compatible shell. Native Linux is not tested. `start.sh` adds `--add-host=host.docker.internal:host-gateway`, which lets the container reach Vault on Linux.
