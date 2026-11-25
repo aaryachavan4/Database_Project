@@ -21,12 +21,8 @@ if ! vault status >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "2. Getting a MariaDB token..."
-if [ -z "${MARIADB_VAULT_TOKEN:-}" ]; then
-  MARIADB_VAULT_TOKEN=$(vault token create -policy=mariadb-policy -ttl=720h -field=token)
-fi
-export MARIADB_VAULT_TOKEN
-
+echo "2. Checking MariaDB Vault token..."
+: "${MARIADB_VAULT_TOKEN:?Set MARIADB_VAULT_TOKEN to the token printed by vault/setup.sh}"
 echo "3. Building the image..."
 docker build -t "$IMAGE" .
 
