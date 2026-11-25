@@ -121,6 +121,7 @@ echo
 echo "Creating MariaDB Vault token..."
 
 MARIADB_TOKEN="$(vault token create \
+    -orphan \
     -policy=mariadb-policy \
     -ttl=720h \
     -field=token)"
