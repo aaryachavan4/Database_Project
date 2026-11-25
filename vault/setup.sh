@@ -110,7 +110,7 @@ if vault kv get -mount=mariadb 1 >/dev/null 2>&1; then
 else
     echo "Creating initial MariaDB encryption key..."
 
-    MARIADB_KEY="$(openssl rand -hex 32)"
+    MARIADB_KEY="$(openssl rand -hex 16)"
     vault kv put -mount=mariadb 1 data="$MARIADB_KEY" >/dev/null
     unset MARIADB_KEY
 

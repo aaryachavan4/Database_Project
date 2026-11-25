@@ -7,7 +7,7 @@ This project encrypts the tables of a MariaDB database at rest, with the encrypt
 Setup: see [mariadb/README.md](mariadb/README.md) for the database and [vault/README.md](vault/README.md) for Vault.
 
 ## Quick start
-1. Start Vault and unseal it (see `vault/README.md`). The Vault CLI is needed to create a token. If you don't have it installed, create a token yourself and export it first with `export MARIADB_VAULT_TOKEN=<token>`.
+1. Start Vault, then run `bash vault/setup.sh` from the project root. It asks for three unseal keys and prints a token. Export the token with `export MARIADB_VAULT_TOKEN=<token>`.
 2. Set the root password for this session:
 
    ```bash
