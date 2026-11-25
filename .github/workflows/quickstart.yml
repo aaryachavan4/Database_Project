@@ -26,6 +26,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/vault-data"
           cat > "$RUNNER_TEMP/vault.hcl" <<EOF
+          disable_mlock = true
           storage "file" {
             path = "$RUNNER_TEMP/vault-data"
           }
