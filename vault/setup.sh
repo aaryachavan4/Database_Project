@@ -8,7 +8,9 @@ KEY_FILE="${HOME}/.database-project-vault-keys"
 ROOT_TOKEN=""
 
 echo "Checking Vault..."
-if ! vault status >/dev/null 2>&1; then
+VAULT_RC=0
+vault status >/dev/null 2>&1 || VAULT_RC=$?
+if [ "$VAULT_RC" -eq 1 ]; then
     echo "Vault is not reachable."
     echo "Start the Vault server first, then run this script again."
     exit 1
@@ -17,7 +19,7 @@ fi
 echo
 echo "Checking whether Vault is initialized..."
 
-INITIALIZED="$(vault status -format=json | python3 -c \
+INITIALIZED="$( (vault status -format=json || true) | python3 -c \
 'import json,sys; print(str(json.load(sys.stdin)["initialized"]).lower())')"
 
 if [ "$INITIALIZED" = "false" ]; then
@@ -51,7 +53,7 @@ fi
 echo
 echo "Checking whether Vault is sealed..."
 
-SEALED="$(vault status -format=json | python3 -c \
+SEALED="$( (vault status -format=json || true) | python3 -c \
 'import json,sys; print(str(json.load(sys.stdin)["sealed"]).lower())')"
 
 if [ "$SEALED" = "true" ]; then
