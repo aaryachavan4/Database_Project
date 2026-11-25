@@ -22,6 +22,22 @@ Setup: see [mariadb/README.md](mariadb/README.md) for the database and [vault/RE
 
 The script builds the image, starts MariaDB with your Vault token, loads the schema and the sample data, and checks that encryption is on. It ends with `Done. MariaDB is running with encryption on.` It removes and recreates the `mariadb` container on every run, so existing data is reset. If `MARIADB_VAULT_TOKEN` is set, the script skips the Vault health check, so make sure Vault is running before you start.
 
+## How to verify it worked
+
+After `bash mariadb/start.sh` finishes, the last lines it prints should be:
+
+```
+PASS innodb_encrypt_tables is ON or FORCE
+PASS hashicorp plugin is active
+PASS customers is encrypted
+PASS accounts is encrypted
+PASS transactions is encrypted
+All checks passed
+Done. MariaDB is running with encryption on.
+```
+
+To check the setup again later, run `bash mariadb/verify.sh` with `MYSQL_ROOT_PASSWORD` set. It prints one PASS or FAIL line for the Vault plugin, the encryption setting and each table. A healthy setup prints five PASS lines.
+
 ## Platforms
 
 Tested on macOS (Docker Desktop) and WSL2 Ubuntu with Docker Desktop. Run all commands in a bash-compatible shell. Native Linux is not tested. `start.sh` adds `--add-host=host.docker.internal:host-gateway`, which lets the container reach Vault on Linux.
