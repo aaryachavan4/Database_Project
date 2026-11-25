@@ -179,3 +179,23 @@ python3 security/vault_failure_test.py   # Test 3, needs the vault CLI logged in
 ```
 
 Each script writes its results into `security/` and puts the database and Vault back the way it found them, even if it is stopped part-way.
+
+## Troubleshooting
+
+**`vault CLI not found. Install it, or export MARIADB_VAULT_TOKEN=<token> and run again.`**
+The script needs the Vault CLI to create a token. Install the CLI, or create a token yourself and run `export MARIADB_VAULT_TOKEN=<token>` before `bash mariadb/start.sh`.
+
+**`Vault is not reachable or is sealed. Start and unseal it first (see vault/README.md).`**
+Vault isn't running, or it hasn't been unsealed. Start Vault, unseal it with three of the five keys, then run the script again.
+
+**`Set MYSQL_ROOT_PASSWORD first: export MYSQL_ROOT_PASSWORD=your_password`**
+The root password isn't set in this shell. Run `export MYSQL_ROOT_PASSWORD=your_password`, then run the script again.
+
+**`MariaDB did not start. Run: docker logs mariadb`**
+The container started but MariaDB didn't come up within two minutes. Run `docker logs mariadb` and read the last lines. If you changed the container name with `CONTAINER`, use that name instead of `mariadb`.
+
+**`The Vault plugin is not active. Run: docker logs mariadb`**
+MariaDB is running, but the `hashicorp_key_management` plugin didn't load. Check the log for `hashicorp` errors. One possible cause is a missing or wrong Vault token.
+
+**Port 3306 is already in use**
+Another MySQL or MariaDB server, or an old container, is using the port. Stop it with `docker ps` and `docker stop <name>`, or stop the local server, then run the script again.
