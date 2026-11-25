@@ -36,8 +36,8 @@ jobs:
           EOF
           vault server -config="$RUNNER_TEMP/vault.hcl" > "$RUNNER_TEMP/vault.log" 2>&1 &
           for i in $(seq 1 30); do
-            vault status >/dev/null 2>&1
-            rc=$?
+            rc=0
+            vault status >/dev/null 2>&1 || rc=$?
             if [ "$rc" -ne 1 ]; then break; fi
             sleep 1
           done
