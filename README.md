@@ -24,7 +24,9 @@ The script builds the image, starts MariaDB with your Vault token, loads the sch
 
 ## Platforms
 
-Tested on macOS (Docker Desktop) and WSL2 Ubuntu with Docker Desktop. Run all commands in a bash-compatible shell. Native Linux is not tested. `start.sh` adds `--add-host=host.docker.internal:host-gateway`, which lets the container reach Vault on Linux.
+Tested on macOS (Docker Desktop), WSL2 Ubuntu with Docker Desktop, and native Ubuntu 24.04.4 LTS (ARM64) in a UTM virtual machine on macOS, with Docker Engine installed in the VM. Run all commands in a bash-compatible shell. `start.sh` adds `--add-host=host.docker.internal:host-gateway`, which lets the container reach Vault on Linux.
+
+**Linux run (25 November 2026):** `bash vault/setup.sh` and `bash mariadb/start.sh` ended with `Done. MariaDB is running with encryption on.` Three things differed from macOS: Vault had to listen on the Docker network rather than only `127.0.0.1`, Python packages needed a virtual environment on Ubuntu 24.04, and `vault/setup.sh` needed a fix for a fresh Vault before it ran to completion.
 
 Each person ran the tests on their own Vault, so the version numbers in each part belong to that person's setup and don't need to match.
 
