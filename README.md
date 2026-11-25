@@ -7,7 +7,7 @@ This project encrypts the tables of a MariaDB database at rest, with the encrypt
 Setup: see [mariadb/README.md](mariadb/README.md) for the database and [vault/README.md](vault/README.md) for Vault.
 
 ## Quick start
-1. Start Vault, then run `bash vault/setup.sh` from the project root. It asks for three unseal keys and prints a token. Export the token with `export MARIADB_VAULT_TOKEN=<token>`.
+1. Start Vault, then run `bash vault/setup.sh` from the project root. If Vault is sealed, it asks for three unseal keys. Setup saves the unseal keys and the root token to `~/.database-project-vault-keys` (permissions `600`, outside the repo). It then prints the MariaDB token. Export it with `export MARIADB_VAULT_TOKEN=<token>`.
 2. Set the root password for this session:
 
    ```bash
@@ -21,6 +21,8 @@ Setup: see [mariadb/README.md](mariadb/README.md) for the database and [vault/RE
    ```
 
 The script builds the image, starts MariaDB with your Vault token, loads the schema and the sample data, and checks that encryption is on. It ends with `Done. MariaDB is running with encryption on.` It removes and recreates the `mariadb` container on every run, so existing data is reset. If `MARIADB_VAULT_TOKEN` is set, the script skips the Vault health check, so make sure Vault is running before you start.
+
+A GitHub Actions workflow (`.github/workflows/quickstart.yml`) runs these steps on a clean Ubuntu machine for every pull request, so a broken quick start is caught before it reaches main. See the Actions tab for the latest result.
 
 ## How to verify it worked
 
