@@ -36,6 +36,18 @@ Each person ran the tests on their own Vault, so the version numbers in each par
 - **Threads plus a Vault refusal can crash MariaDB:** if Vault refuses access while encryption threads are running, MariaDB crashed (Part 4).
 - **Vault outages are survivable, with limits:** cached keys keep reads and writes working while Vault is down, but MariaDB won't start without Vault (Part 4).
 
+## Where to find what
+
+| Claim | File |
+|---|---|
+| 0 of 114 values readable in the encrypted files, 77 of 77 unencrypted | `security/inspect_files.py`, `security/before_after.txt` |
+| 0 failed queries during rotation under load, identical checksums | `security/key_rotation_test.py`, `security/rotation_results.txt` |
+| One rotation does not re-encrypt existing data | `security/rotation_results.txt`, Part 1 |
+| MariaDB crash when Vault refuses access with encryption threads on | `security/failure_results.md`, `security/failure_results_threads4.md` |
+| Vault outage behaviour (scenarios A to D) | `security/failure_results.md` |
+| Rotation writes and latency | `mariadb/rotation_writes.log` |
+| Performance overhead | `performance/analysis.md`, `performance/results/summary.md` |
+| Vault setup and checks | `vault/README.md` |
 ## Team and method
 
 **Team:**
