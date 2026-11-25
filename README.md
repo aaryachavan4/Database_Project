@@ -36,6 +36,18 @@ Each person ran the tests on their own Vault, so the version numbers in each par
 - **Threads plus a Vault refusal can crash MariaDB:** if Vault refuses access while encryption threads are running, MariaDB crashed (Part 4).
 - **Vault outages are survivable, with limits:** cached keys keep reads and writes working while Vault is down, but MariaDB won't start without Vault (Part 4).
 
+## Where to find what
+
+| Claim | File |
+|---|---|
+| 0 of 114 values readable in the encrypted files, 77 of 77 unencrypted | `security/inspect_files.py`, `security/before_after.txt` |
+| 0 failed queries during rotation under load, identical checksums | `security/key_rotation_test.py`, `security/rotation_results.txt` |
+| One rotation does not re-encrypt existing data | `security/rotation_results.txt`, Part 1 |
+| MariaDB crash when Vault refuses access with encryption threads on | `security/failure_results.md`, `security/failure_results_threads4.md` |
+| Vault outage behaviour (scenarios A to D) | `security/failure_results.md` |
+| Rotation writes and latency | `mariadb/rotation_writes.log` |
+| Performance overhead | `performance/analysis.md`, `performance/results/summary.md` |
+| Vault setup and checks | `vault/README.md` |
 ## Team and method
 
 **Team:**
@@ -179,3 +191,23 @@ python3 security/vault_failure_test.py   # Test 3, needs the vault CLI logged in
 ```
 
 Each script writes its results into `security/` and puts the database and Vault back the way it found them, even if it is stopped part-way.
+
+## Troubleshooting
+
+**`vault CLI not found. Install it, or export MARIADB_VAULT_TOKEN=<token> and run again.`**
+The script needs the Vault CLI to create a token. Install the CLI, or create a token yourself and run `export MARIADB_VAULT_TOKEN=<token>` before `bash mariadb/start.sh`.
+
+**`Vault is not reachable or is sealed. Start and unseal it first (see vault/README.md).`**
+Vault isn't running, or it hasn't been unsealed. Start Vault, unseal it with three of the five keys, then run the script again.
+
+**`Set MYSQL_ROOT_PASSWORD first: export MYSQL_ROOT_PASSWORD=your_password`**
+The root password isn't set in this shell. Run `export MYSQL_ROOT_PASSWORD=your_password`, then run the script again.
+
+**`MariaDB did not start. Run: docker logs mariadb`**
+The container started but MariaDB didn't come up within two minutes. Run `docker logs mariadb` and read the last lines. If you changed the container name with `CONTAINER`, use that name instead of `mariadb`.
+
+**`The Vault plugin is not active. Run: docker logs mariadb`**
+MariaDB is running, but the `hashicorp_key_management` plugin didn't load. Check the log for `hashicorp` errors. One possible cause is a missing or wrong Vault token.
+
+**Port 3306 is already in use**
+Another MySQL or MariaDB server, or an old container, is using the port. Stop it with `docker ps` and `docker stop <name>`, or stop the local server, then run the script again.
