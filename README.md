@@ -25,7 +25,10 @@ The script builds the image, starts MariaDB with your Vault token, loads the sch
 ## Platforms
 
 Tested on macOS (Docker Desktop) and WSL2 Ubuntu with Docker Desktop. Run all commands in a bash-compatible shell. Native Linux is not tested. `start.sh` adds `--add-host=host.docker.internal:host-gateway`, which lets the container reach Vault on Linux.
+A complete WSL2 Ubuntu run was verified on November 18, 2026. The workflow successfully built the MariaDB image, loaded 10,000 customers, 50,000 accounts and 1,000,000 transactions, verified the HashiCorp Vault plugin, confirmed that all three tablespaces were encrypted, passed the connection test, and ended with:
 
+```text
+Done. MariaDB is running with encryption on.
 Each person ran the tests on their own Vault, so the version numbers in each part belong to that person's setup and don't need to match.
 
 ## Key Findings
