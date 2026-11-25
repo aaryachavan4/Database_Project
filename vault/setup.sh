@@ -27,15 +27,16 @@ if [ "$INITIALIZED" = "false" ]; then
 
     INIT_JSON="$(vault operator init -key-shares=5 -key-threshold=3 -format=json)"
 
-    # Save only the unseal keys outside the repository.
+    # Save the unseal keys and root token outside the repository.
+    touch "$KEY_FILE"
+    chmod 600 "$KEY_FILE"
     printf '%s\n' "$INIT_JSON" | python3 -c '
 import json, sys
 data = json.load(sys.stdin)
 for key in data["unseal_keys_b64"]:
-    print(key)
+    print("unseal_key: " + key)
+print("root_token: " + data["root_token"])
 ' > "$KEY_FILE"
-
-    chmod 600 "$KEY_FILE"
 
     ROOT_TOKEN="$(printf '%s\n' "$INIT_JSON" | python3 -c \
 'import json,sys; print(json.load(sys.stdin)["root_token"])')"
@@ -74,11 +75,14 @@ echo "Authenticating for administrative setup..."
 
 if [ -n "$ROOT_TOKEN" ]; then
     export VAULT_TOKEN="$ROOT_TOKEN"
+elif vault token lookup >/dev/null 2>&1; then
+    : # already authenticated
+elif [ -f "$KEY_FILE" ] && grep -q '^root_token: ' "$KEY_FILE"; then
+    export VAULT_TOKEN="$(sed -n 's/^root_token: //p' "$KEY_FILE")"
 else
-    if ! vault token lookup >/dev/null 2>&1; then
-        echo "Enter a Vault root/admin token."
-        vault login
-    fi
+    echo "Vault is already initialized, but no root token is saved in $KEY_FILE."
+    echo "Find the root token you saved, or reset vault/data/ and run this script again."
+    exit 1
 fi
 
 echo
