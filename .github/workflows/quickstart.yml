@@ -1,0 +1,80 @@
+name: quickstart
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quickstart:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      VAULT_ADDR: http://127.0.0.1:8200
+      VAULT_VERSION: "2.2.2"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vault CLI and server
+        run: |
+          curl -fsSL -o vault.zip "https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip"
+          mkdir -p "$HOME/bin"
+          unzip -q vault.zip -d "$HOME/bin"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Start Vault
+        run: |
+          mkdir -p "$RUNNER_TEMP/vault-data"
+          cat > "$RUNNER_TEMP/vault.hcl" <<EOF
+          storage "file" {
+            path = "$RUNNER_TEMP/vault-data"
+          }
+          listener "tcp" {
+            address     = "0.0.0.0:8200"
+            tls_disable = 1
+          }
+          EOF
+          vault server -config="$RUNNER_TEMP/vault.hcl" > "$RUNNER_TEMP/vault.log" 2>&1 &
+          for i in $(seq 1 30); do
+            vault status >/dev/null 2>&1
+            rc=$?
+            if [ "$rc" -ne 1 ]; then break; fi
+            sleep 1
+          done
+
+      - name: Initialise and unseal Vault
+        run: |
+          vault operator init -key-shares=5 -key-threshold=3 -format=json > "$RUNNER_TEMP/init.json"
+          ROOT_TOKEN="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["root_token"])' "$RUNNER_TEMP/init.json")"
+          echo "::add-mask::$ROOT_TOKEN"
+          echo "VAULT_TOKEN=$ROOT_TOKEN" >> "$GITHUB_ENV"
+          python3 -c 'import json,sys; [print(k) for k in json.load(open(sys.argv[1]))["unseal_keys_b64"][:3]]' "$RUNNER_TEMP/init.json" \
+            | while read -r key; do vault operator unseal "$key" > /dev/null; done
+          rm -f "$RUNNER_TEMP/init.json"
+          vault status | grep -E "Initialized|Sealed"
+
+      - name: Set MariaDB root password
+        run: |
+          PW="$(openssl rand -hex 16)"
+          echo "::add-mask::$PW"
+          echo "MYSQL_ROOT_PASSWORD=$PW" >> "$GITHUB_ENV"
+
+      - name: Run vault/setup.sh
+        run: |
+          bash vault/setup.sh < /dev/null > "$RUNNER_TEMP/setup.log" 2>&1
+          MARIADB_TOKEN="$(grep -A1 'MariaDB Vault token (shown once):' "$RUNNER_TEMP/setup.log" | tail -n 1)"
+          echo "::add-mask::$MARIADB_TOKEN"
+          echo "MARIADB_VAULT_TOKEN=$MARIADB_TOKEN" >> "$GITHUB_ENV"
+          echo "setup.sh finished. The MariaDB token was captured and is not printed."
+
+      - name: Start MariaDB with encryption
+        run: bash mariadb/start.sh
+
+      - name: Verify encryption
+        run: bash mariadb/verify.sh
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          tail -n 40 "$RUNNER_TEMP/vault.log" || true
+          docker logs mariadb 2>&1 | tail -n 60 || true
