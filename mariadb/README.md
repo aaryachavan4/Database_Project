@@ -21,7 +21,7 @@ vault policy write mariadb-policy - <<'EOF'
 path "mariadb/*" { capabilities = ["create", "read", "update", "delete", "list"] }
 path "sys/mounts/mariadb/tune" { capabilities = ["read"] }
 EOF
-vault kv put mariadb/1 data="$(openssl rand -hex 16)"
+vault kv put mariadb/1 data="$(openssl rand -hex 32)"
 ```
 
 ## 3. Create a token for MariaDB
@@ -49,7 +49,7 @@ The script builds the image, starts MariaDB with your Vault token, loads the sch
 To rotate the key, write a new version to Vault, then flush MariaDB's key cache:
 ```bash
 export VAULT_ADDR='http://127.0.0.1:8200'
-vault kv put mariadb/1 data="$(openssl rand -hex 16)"
+vault kv put mariadb/1 data="$(openssl rand -hex 32)"
 docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH HASHICORP_KEY_MANAGEMENT_CACHE; SELECT * FROM information_schema.HASHICORP_KEY_MANAGEMENT_CACHE;"
 ```
 The cache output should show the new `KEY_VERSION`. Do not delete old key versions, since existing data may still need them.

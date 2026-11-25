@@ -108,7 +108,7 @@ The connection test also confirmed that the `customers`, `accounts`, and `transa
 
 A Vault KV v2 key rotation test was performed.
 
-Before rotation:
+In Durgesh's recorded rotation test, Vault and MariaDB both reported key version 3 before rotation:
 
 ```text
 Vault key version:    3
@@ -117,7 +117,7 @@ MariaDB key version:  3
 
 After rotation, the active Vault key version became `5`.
 
-MariaDB continued to support both reads and writes without requiring a restart.
+During this recorded test, MariaDB continued to serve the tested read and write operations without requiring a restart.
 
 The encrypted tablespaces for `accounts`, `customers`, and `transactions` all reported:
 

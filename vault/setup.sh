@@ -20,7 +20,7 @@ fi
 echo
 echo "Creating MariaDB Vault policy..."
 
-cat >/tmp/mariadb-policy.hcl <<'EOF'
+vault policy write mariadb-policy - <<'EOF'
 path "mariadb/data/*" {
   capabilities = ["read"]
 }
@@ -29,9 +29,6 @@ path "sys/mounts/mariadb/tune" {
   capabilities = ["read"]
 }
 EOF
-
-vault policy write mariadb-policy /tmp/mariadb-policy.hcl
-rm -f /tmp/mariadb-policy.hcl
 
 echo
 echo "Checking MariaDB encryption key..."
@@ -50,6 +47,7 @@ fi
 
 echo
 echo "Vault setup complete."
+echo
 
 echo
 echo "To create a MariaDB Vault token, run:"
@@ -61,3 +59,4 @@ echo "- Vault tokens"
 echo "- unseal keys"
 echo "- encryption key values"
 echo "- vault/data/"
+

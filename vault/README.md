@@ -76,6 +76,15 @@ using the required number of different unseal keys.
 
 Vault tokens and unseal keys must never be committed to Git.
 
+### Setup Checklist
+
+Follow these steps in order:
+
+1. Start the Vault server:
+
+   ```bash
+   vault server -config=vault/config.hcl
+
 ## Vault Secrets Engine
 
 The MariaDB integration uses a Vault KV v2 secrets engine mounted at:
@@ -139,7 +148,8 @@ encrypt_tmp_files=ON
 Run:
 
 ```bash
-docker exec mariadb mariadb -uroot -proot_password -e \
+export MYSQL_ROOT_PASSWORD='your_password'
+docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e \
 "SELECT PLUGIN_NAME, PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME LIKE 'hashicorp%';"
 ```
 
@@ -155,7 +165,7 @@ hashicorp_key_management_cache  ACTIVE
 Run:
 
 ```bash
-docker exec mariadb mariadb -uroot -proot_password -e \
+docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e \
 "SHOW VARIABLES LIKE 'innodb_encrypt%';"
 ```
 
