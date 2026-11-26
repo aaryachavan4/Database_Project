@@ -56,6 +56,14 @@ Each person ran the tests on their own Vault, so the version numbers in each par
 - **Threads plus a Vault refusal can crash MariaDB:** if Vault refuses access while encryption threads are running, MariaDB crashed (Part 4).
 - **Vault outages are survivable, with limits:** cached keys keep reads and writes working while Vault is down, but MariaDB won't start without Vault (Part 4).
 
+A complete WSL2 Ubuntu run was successfully verified on November 26, 2026, after applying the Dockerfile configuration permission fix (`COPY --chmod=644`).
+
+The run loaded 10,000 customers, 50,000 accounts and 500,000 transactions. The HashiCorp plugin was active, all three tablespaces were encrypted, and all connection checks passed.
+
+The execution output, with credentials redacted, is available in [`vault/wsl-run-output.txt`](vault/wsl-run-output.txt).
+
+The execution ended with `Done. MariaDB is running with encryption on.`
+
 ## Where to find what
 
 | Claim | File |
