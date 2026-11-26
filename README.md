@@ -46,6 +46,8 @@ Tested on macOS (Docker Desktop), WSL2 Ubuntu with Docker Desktop, and native Ub
 
 **Linux run (25 November 2026):** `bash vault/setup.sh` and `bash mariadb/start.sh` ended with `Done. MariaDB is running with encryption on.` Three things differed from macOS: Vault had to listen on the Docker network rather than only `127.0.0.1`, Python packages needed a virtual environment on Ubuntu 24.04, and `vault/setup.sh` needed a fix for a fresh Vault before it ran to completion.
 
+**WSL2 run (26 November 2026):** setup and start ended with `Done. MariaDB is running with encryption on.` after the `COPY --chmod=644` fix. The run loaded 500,000 transactions. The full output, with credentials redacted, is in [`vault/wsl-run-output.txt`](vault/wsl-run-output.txt).
+
 Each person ran the tests on their own Vault, so the version numbers in each part belong to that person's setup and don't need to match.
 
 ## Key Findings
@@ -55,14 +57,6 @@ Each person ran the tests on their own Vault, so the version numbers in each par
 - **One rotation is not enough:** existing data stays on the old key until a second rotation (Part 1 and Part 4).
 - **Threads plus a Vault refusal can crash MariaDB:** if Vault refuses access while encryption threads are running, MariaDB crashed (Part 4).
 - **Vault outages are survivable, with limits:** cached keys keep reads and writes working while Vault is down, but MariaDB won't start without Vault (Part 4).
-
-A complete WSL2 Ubuntu run was successfully verified on November 26, 2026, after applying the Dockerfile configuration permission fix (`COPY --chmod=644`).
-
-The run loaded 10,000 customers, 50,000 accounts and 500,000 transactions. The HashiCorp plugin was active, all three tablespaces were encrypted, and all connection checks passed.
-
-The execution output, with credentials redacted, is available in [`vault/wsl-run-output.txt`](vault/wsl-run-output.txt).
-
-The execution ended with `Done. MariaDB is running with encryption on.`
 
 ## Where to find what
 
